@@ -8,6 +8,10 @@ const session = require('express-session')
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
 
+//load user.json file
+const userObj = JSON.parse(path.join(__dirname, '/../data/user.json'))
+console.log(userObj)
+
 const app = express()
 
 // view engine setup
@@ -30,12 +34,15 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 function authenticate() {
+    
+    
     passport.serializeUser((user, done) => {
         done(null, user.id)
       })
       
       passport.deserializeUser(async (id, done) => {
-        const user = await serviceAuth.findById(id)
+//        const user = await serviceAuth.findById(id)
+        const user = userObj.find(item => item.id === id)
         done(null, user)
       })
       
@@ -43,7 +50,7 @@ function authenticate() {
       passport.use('local', new LocalStrategy({
         usernameField: 'username',
       }, async(username, password, done) => {
-        const user = await serviceAuth.signin(username, password)
+        const user = userObj.find(item => item.username === username)
         done(null, user)
       }))
 }

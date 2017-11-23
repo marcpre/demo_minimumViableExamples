@@ -1,0 +1,25 @@
+extends layout
+
+block content
+  body
+    .container-fluid
+      .row
+        .col-md-12
+          hr
+          .h1 Login
+          .row
+          form.form-horizontal(method='POST' action='/login')
+            input(type='hidden', name='_csrf')
+            .form-group
+              label.col-sm-3.control-label(for='username') Username
+              .col-sm-7
+                input#username.form-control(type='username', name='username', placeholder='username', autofocus='autofocus', required='required')
+            .form-group
+              label.col-sm-3.control-label(for='password') Password
+              .col-sm-7
+                input#password.form-control(type='password', name='password', placeholder='password', autofocus='autofocus', required='required')
+            .form-group
+              .col-sm-offset-3.col-sm-7
+                button.col-sm-3.btn.btn-primary(type='submit')
+                  i.fa.fa-user
+                  | Submit          
