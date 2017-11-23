@@ -8,7 +8,7 @@ const cookieParser = require('cookie-parser')
 const session = require('express-session')
 const passport = require('passport')
 const LocalStrategy = require('passport-local').Strategy
-const acl = require('acl')
+const ACL = require('acl')
 
 // load user.json file
 const d = fs.readFileSync(path.join(__dirname, '/../data/user.json'))
@@ -59,6 +59,13 @@ function authenticate() {
   }))
 }
 
+const isAuthenticated = (req, res, next) => {
+  if (req.isAuthenticated()) {
+    res.locals.user = req.session.user
+    return next()
+  }
+  res.redirect('login')
+}
 authenticate()
 
 /**
@@ -66,9 +73,9 @@ authenticate()
  */
 
 function accessControl() {
-  acl = new acl(new acl.memoryBackend())
+  const nodeAcl = new ACL(new ACL.memoryBackend())
 
-  acl.allow([{
+  nodeAcl.allow([{
     roles: 'admin',
     allows: [{
       resources: '/admin',
@@ -88,11 +95,16 @@ function accessControl() {
   // Inherit roles
   //  Every user is allowed to do what guests do
   //  Every admin is allowed to do what users do
-  acl.addRoleParents('user', 'guest')
-  acl.addRoleParents('admin', 'user')
+  nodeAcl.addRoleParents('user', 'guest')
+  nodeAcl.addRoleParents('admin', 'user')
+  return nodeAcl
 }
 
-// routes
+const getCurrentUserId = (req) =>  { req.user && req.user.id.toString() || false }
+
+const access = accessControl()
+
+// Routes
 app.get('/login', (req, res) => {
   res.render('login')
 })
@@ -108,6 +120,14 @@ app.post('/login', (req, res, next) => {
 
     return res.render('dashboard')
   })(req, res, next)
+})
+
+app.get('/dashboard', [isAuthenticated, access.middleware(1, getCurrentUserId)], (req, res) => {
+  res.render('dashboard')
+})
+
+app.get('/admin', [isAuthenticated, access.middleware(1, getCurrentUserId)], (req, res) => {
+  res.render('admin')
 })
 
 // Start Server
