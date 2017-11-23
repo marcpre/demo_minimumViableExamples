@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/marcpre/demo_minimumViableExamples#readme",
   "dependencies": {
+    "acl": "^0.4.11",
     "body-parser": "^1.18.2",
     "cookie-parser": "^1.4.3",
     "dotenv": "^4.0.0",
