@@ -110,12 +110,33 @@ function accessControl() {
   //  Every admin is allowed to do what users do
   nodeAcl.addRoleParents('user', 'guest')
   nodeAcl.addRoleParents('admin', 'user')
+
+  nodeAcl.addUserRoles(1, 'admin')
+  nodeAcl.addUserRoles(2, 'user')
+  nodeAcl.addUserRoles(0, 'guest')
+
   return nodeAcl
 }
 
-const getCurrentUserId = (req) => { 
+function checkPermission(resource, action) {
+  const access = accessControl()
+
+  return (req, res, next) => {
+    const uid = req.session.user.id
+    access.isAllowed(uid, resource, action, (err, result) => {
+      if (result) {
+        next()
+      } else {
+        const checkError = new Error('User does not have permission to perform this action on this resource')
+        next(checkError)
+      }
+    })
+  }
+}
+
+const getCurrentUserId = (req) => {
   console.log(req)
-  req.user && req.user.id.toString() || false 
+  req.user && req.user.id.toString() || false
 }
 
 const access = accessControl()
@@ -138,11 +159,11 @@ app.post('/login', (req, res, next) => {
   })(req, res, next)
 })
 
-app.get('/dashboard', [isAuthenticated, access.middleware(1, getCurrentUserId, 'user')], (req, res) => {
+app.get('/dashboard', [isAuthenticated, checkPermission('/dashboard', 'get')], (req, res) => {
   res.render('dashboard')
 })
 
-app.get('/admin', [isAuthenticated, access.middleware(1, getCurrentUserId, 'admin')], (req, res) => {
+app.get('/admin', [isAuthenticated, checkPermission('/admin', '*')], (req, res) => {
   res.render('admin')
 })
 
