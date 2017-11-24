@@ -1,6 +1,6 @@
 require('dotenv').config()
 const express = require('express')
-const fs = require('fs')
+// const fs = require('fs')
 const path = require('path')
 const logger = require('morgan')
 const bodyParser = require('body-parser')
@@ -11,8 +11,21 @@ const LocalStrategy = require('passport-local').Strategy
 const ACL = require('acl')
 
 // load user.json file
-const d = fs.readFileSync(path.join(__dirname, '/../data/user.json'))
-const userObj = JSON.parse(d)
+// const d = fs.readFileSync(path.join(__dirname, '/../data/user.json'))
+// const userObj = JSON.parse(d)
+const userObj = [{
+  id: 1,
+  username: 'admin',
+  password: 'admin',
+  email: 'admin@admin.com',
+},
+{
+  id: 2,
+  username: 'user',
+  password: 'user',
+  email: 'user@user.com',
+},
+]
 
 const app = express()
 
@@ -100,7 +113,10 @@ function accessControl() {
   return nodeAcl
 }
 
-const getCurrentUserId = (req) =>  { req.user && req.user.id.toString() || false }
+const getCurrentUserId = (req) => { 
+  console.log(req)
+  req.user && req.user.id.toString() || false 
+}
 
 const access = accessControl()
 
@@ -122,12 +138,18 @@ app.post('/login', (req, res, next) => {
   })(req, res, next)
 })
 
-app.get('/dashboard', [isAuthenticated, access.middleware(1, getCurrentUserId)], (req, res) => {
+app.get('/dashboard', [isAuthenticated, access.middleware(1, getCurrentUserId, 'user')], (req, res) => {
   res.render('dashboard')
 })
 
-app.get('/admin', [isAuthenticated, access.middleware(1, getCurrentUserId)], (req, res) => {
+app.get('/admin', [isAuthenticated, access.middleware(1, getCurrentUserId, 'admin')], (req, res) => {
   res.render('admin')
+})
+
+app.get('/status', (request, response) => {
+  access.userRoles(getCurrentUserId(request), (error, roles) => {
+    response.send(`User: ${JSON.stringify(request.user)} Roles: ${JSON.stringify(roles)}`)
+  })
 })
 
 // Start Server
