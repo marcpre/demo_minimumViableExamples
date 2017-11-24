@@ -18,12 +18,14 @@ const userObj = [{
   username: 'admin',
   password: 'admin',
   email: 'admin@admin.com',
+  role: 'admin',
 },
 {
   id: 2,
   username: 'user',
   password: 'user',
   email: 'user@user.com',
+  role: 'user',
 },
 ]
 
@@ -118,6 +120,7 @@ function accessControl() {
   return nodeAcl
 }
 
+/*
 function checkPermission(resource, action) {
   const access = accessControl()
 
@@ -132,7 +135,7 @@ function checkPermission(resource, action) {
       }
     })
   }
-}
+} */
 
 const getCurrentUserId = (req) => {
   console.log(req)
@@ -159,11 +162,11 @@ app.post('/login', (req, res, next) => {
   })(req, res, next)
 })
 
-app.get('/dashboard', [isAuthenticated, checkPermission('/dashboard', 'get')], (req, res) => {
+app.get('/dashboard', [isAuthenticated, access.middleware()], (req, res) => {
   res.render('dashboard')
 })
 
-app.get('/admin', [isAuthenticated, checkPermission('/admin', '*')], (req, res) => {
+app.get('/admin', [isAuthenticated, access.middleware()], (req, res) => {
   res.render('admin')
 })
 
